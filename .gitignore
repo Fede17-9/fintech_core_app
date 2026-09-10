@@ -1,0 +1,16 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Entorno y variables secretas
+.env
+.env.local
+
+# Compilación y logs
+dist/
+build/
+*.log
+
+# Sistema operativo
+.DS_Store
+.vscode/
