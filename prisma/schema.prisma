@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  createdAt    DateTime  @default(now())
+  accounts     Account[]
+}
+
+model Account {
+  id                  String        @id @default(uuid()) @db.Uuid
+  accountNumber       String        @unique
+  balance             Decimal       @default(0) @db.Decimal(19, 4)
+  userId              String        @db.Uuid
+  status              AccountStatus @default(ACTIVE)
+  createdAt           DateTime      @default(now())
+  user                User          @relation(fields: [userId], references: [id])
+  outgoingTransactions Transaction[] @relation("SourceAccount")
+  incomingTransactions Transaction[] @relation("DestinationAccount")
+}
+
+model Transaction {
+  id                  String             @id @default(uuid()) @db.Uuid
+  amount              Decimal            @db.Decimal(19, 4)
+  status              TransactionStatus  @default(PENDING)
+  type                TransactionType
+  description         String
+  sourceAccountId     String?            @db.Uuid
+  destinationAccountId String?           @db.Uuid
+  createdAt           DateTime           @default(now())
+  sourceAccount       Account?           @relation("SourceAccount", fields: [sourceAccountId], references: [id])
+  destinationAccount  Account?           @relation("DestinationAccount", fields: [destinationAccountId], references: [id])
+
+  @@index([sourceAccountId])
+  @@index([destinationAccountId])
+  @@index([createdAt])
+}

@@ -8,12 +8,12 @@ import {
 export type AccountStatus = 'ACTIVE' | 'FROZEN';
 
 export interface AccountProps {
-  id: string;
+  id?: string;
   accountNumber: string;
   balance: Decimal; // Blindaje contra el problema de punto flotante
   userId: string;
   status: AccountStatus;
-  createdAt: Date;
+  createdAt?: Date;
 }
 
 export class Account {
@@ -28,15 +28,18 @@ export class Account {
     if (props.balance.isNegative()) {
       throw new InvalidAmountError('Una cuenta no puede ser inicializada con saldo negativo.');
     }
+    if (!props.createdAt) {
+      props.createdAt = new Date();
+    }
     return new Account(props);
   }
 
-  get id(): string { return this.props.id; }
+  get id(): string | undefined { return this.props.id; }
   get accountNumber(): string { return this.props.accountNumber; }
   get balance(): Decimal { return this.props.balance; }
   get userId(): string { return this.props.userId; }
   get status(): AccountStatus { return this.props.status; }
-  get createdAt(): Date { return this.props.createdAt; }
+  get createdAt(): Date | undefined { return this.props.createdAt; }
 
   // --- COMPORTAMIENTOS DEL DOMINIO ---
 
@@ -53,15 +56,19 @@ export class Account {
       throw new InvalidAmountError('El monto del retiro debe ser estrictamente mayor a cero.');
     }
     if (this.props.status === 'FROZEN') {
-      throw new AccountFrozenError(this.id);
+      throw new AccountFrozenError(this.id ?? this.accountNumber);
     }
     if (this.props.balance.lessThan(amount)) {
-      throw new InsufficientBalanceError(this.id);
+      throw new InsufficientBalanceError(this.id ?? this.accountNumber);
     }
     this.props.balance = this.props.balance.minus(amount);
   }
 
   public freeze(): void {
     this.props.status = 'FROZEN';
+  }
+
+  public unfreeze(): void {
+    this.props.status = 'ACTIVE';
   }
 }
