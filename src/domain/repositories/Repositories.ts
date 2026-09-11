@@ -14,6 +14,7 @@ export interface AccountRepository {
   findByUserId(userId: string): Promise<Account[]>;
   save(account: Account): Promise<void>;
   update(account: Account): Promise<void>;
+  executeTransaction(transaction: Transaction): Promise<Transaction>;
 }
 
 export interface TransactionRepository {

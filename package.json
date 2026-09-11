@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "postinstall": "prisma skills sync || exit 0"
   },
   "keywords": [],
@@ -21,12 +23,15 @@
   "devDependencies": {
     "@prisma/client": "^7.10.0",
     "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "dotenv": "^17.4.2",
     "eslint": "^10.8.1",
     "prettier": "^3.9.6",
     "prisma": "7.10.0",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
   },
   "dependencies": {
     "decimal.js": "^10.6.0"

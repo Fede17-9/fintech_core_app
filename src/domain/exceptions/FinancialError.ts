@@ -1,5 +1,11 @@
 import { DomainError } from './DomainError.js';
 
+export class AccountNotFoundError extends DomainError {
+  constructor(accountId: string) {
+    super(`La cuenta con ID '${accountId}' no fue encontrada o no existe.`);
+  }
+}
+
 export class InsufficientBalanceError extends DomainError {
   constructor(accountId: string) {
     super(`Operación denegada: Saldo insuficiente en la cuenta [${accountId}].`);
