@@ -1,5 +1,6 @@
 # Dependencias
 node_modules/
+/src/generated/prisma
 .pnpm-store/
 
 # Entorno y variables secretas
