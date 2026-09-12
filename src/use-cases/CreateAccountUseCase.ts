@@ -28,6 +28,10 @@ export class CreateAccountUseCase {
 
     await this.accountRepository.save(newAccount);
 
+    if (!newAccount.id || !newAccount.createdAt) {
+      throw new Error('La cuenta creada no tiene los metadatos requeridos.');
+    }
+
     return {
       id: newAccount.id,
       accountNumber: newAccount.accountNumber,

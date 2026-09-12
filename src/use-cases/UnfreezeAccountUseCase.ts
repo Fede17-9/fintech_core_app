@@ -1,19 +1,19 @@
 import { AccountNotFoundError } from '../domain/exceptions/FinancialError.js';
 import type { AccountRepository } from '../domain/repositories/Repositories.js';
-import type { GetBalanceInputDTO, AccountOutputDTO } from './dto/AccountDTOs.js';
+import type { AccountOutputDTO } from './dto/AccountDTOs.js';
 
-export class GetBalanceUseCase {
+export class UnfreezeAccountUseCase {
   constructor(private readonly accountRepository: AccountRepository) {}
 
-  async execute(input: GetBalanceInputDTO): Promise<AccountOutputDTO> {
-    const account = await this.accountRepository.findById(input.accountId);
+  async execute(accountId: string): Promise<AccountOutputDTO> {
+    const account = await this.accountRepository.findById(accountId);
+    if (!account) throw new AccountNotFoundError(accountId);
 
-    if (!account) {
-      throw new AccountNotFoundError(input.accountId);
-    }
+    account.unfreeze();
+    await this.accountRepository.update(account);
 
     if (!account.id || !account.createdAt) {
-      throw new Error('La cuenta encontrada no tiene los metadatos requeridos.');
+      throw new Error('La cuenta no tiene los metadatos requeridos.');
     }
 
     return {

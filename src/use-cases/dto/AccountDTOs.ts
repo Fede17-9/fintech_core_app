@@ -6,12 +6,12 @@ export interface CreateAccountInputDTO {
 }
 
 export interface AccountOutputDTO {
-  id?: string;
+  id: string;
   accountNumber: string;
   balance: Decimal;
   status: string;
   userId: string;
-  createdAt?: Date;
+  createdAt: Date;
 }
 
 export interface GetBalanceInputDTO {

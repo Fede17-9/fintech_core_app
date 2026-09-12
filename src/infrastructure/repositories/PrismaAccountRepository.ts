@@ -1,7 +1,10 @@
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import type { AccountRepository } from '../../domain/repositories/Repositories.js';
 import { Account } from '../../domain/entities/Account.js';
+import { Deposit, Transfer, Withdrawal } from '../../domain/entities/Transaction.js';
+import { AccountFrozenError, InsufficientBalanceError } from '../../domain/exceptions/FinancialError.js';
 import { AccountMapper } from '../mappers/AccountMapper.js';
+import { TransactionMapper } from '../mappers/TransactionMapper.js';
 
 export class PrismaAccountRepository implements AccountRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -37,6 +40,44 @@ export class PrismaAccountRepository implements AccountRepository {
         ...(data.balance !== undefined ? { balance: data.balance } : {}),
         ...(data.status !== undefined ? { status: data.status } : {}),
       },
+    });
+  }
+
+  async executeTransaction(transaction: import('../../domain/entities/Transaction.js').Transaction): Promise<import('../../domain/entities/Transaction.js').Transaction> {
+    return this.prisma.$transaction(async (tx) => {
+      if (transaction instanceof Transfer || transaction instanceof Withdrawal) {
+        const sourceAccountId = transaction.sourceAccount;
+        const debited = await tx.account.updateMany({
+          where: {
+            id: sourceAccountId,
+            status: 'ACTIVE',
+            balance: { gte: transaction.amount },
+          },
+          data: { balance: { decrement: transaction.amount } },
+        });
+
+        if (debited.count === 0) {
+          const sourceAccount = await tx.account.findUnique({ where: { id: sourceAccountId } });
+          if (sourceAccount?.status === 'FROZEN') {
+            throw new AccountFrozenError(sourceAccountId);
+          }
+          throw new InsufficientBalanceError(sourceAccountId);
+        }
+      }
+
+      if (transaction instanceof Transfer || transaction instanceof Deposit) {
+        const destinationAccountId = transaction.destinationAccount;
+        await tx.account.update({
+          where: { id: destinationAccountId },
+          data: { balance: { increment: transaction.amount } },
+        });
+      }
+
+      const transactionRecord = await tx.transaction.create({
+        data: TransactionMapper.toPersistence(transaction),
+      });
+
+      return TransactionMapper.toDomain(transactionRecord);
     });
   }
 
