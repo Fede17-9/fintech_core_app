@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx src/server.ts",
     "build": "tsc --outDir dist --rootDir src",
+    "prestart": "pnpm build",
     "start": "node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
