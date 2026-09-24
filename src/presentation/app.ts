@@ -23,7 +23,7 @@ export const createApp = (prisma: PrismaClient): Application => {
     app.use(cors());
     app.use(express.json());
 
-    app.use('/auth', createAuthRoutes(authController));
+    app.use('/api/auth', createAuthRoutes(authController));
 
     const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
         if (error instanceof DomainError) {
