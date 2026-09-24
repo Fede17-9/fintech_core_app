@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import type { TokenPayload, TokenService } from '../../domain/services/TokenService.js';
 
 export class JwtTokenService implements TokenService {
