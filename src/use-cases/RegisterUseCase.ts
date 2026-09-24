@@ -1,15 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import * as bcrypt from 'bcrypt';
 import { User } from '../domain/entities/User.js';
 import { InvalidPropValueError } from '../domain/exceptions/DomainError.js';
 import { UserAlreadyExistsError } from '../domain/exceptions/UserError.js';
 import type { UserRepository } from '../domain/repositories/Repositories.js';
+import type { PasswordHasher } from '../domain/services/PasswordHasher.js';
 import type { RegisterInputDTO, UserOutputDTO } from './dto/AuthDTOs.js';
 
 export class RegisterUseCase {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly saltRounds = 12,
+    private readonly passwordHasher: PasswordHasher,
   ) {}
 
   async execute(input: RegisterInputDTO): Promise<UserOutputDTO> {
@@ -25,7 +25,7 @@ export class RegisterUseCase {
     const user = User.create({
       id: randomUUID(),
       email: input.email,
-      passwordHash: await bcrypt.hash(input.password, this.saltRounds),
+      passwordHash: await this.passwordHasher.hash(input.password),
       fullName: input.fullName,
       createdAt: new Date(),
     });

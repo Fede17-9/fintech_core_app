@@ -4,6 +4,8 @@ import express, { type Application, type ErrorRequestHandler } from 'express';
 import { DomainError } from '../domain/exceptions/DomainError.js';
 import { PrismaClient } from '../generated/prisma/client.js';
 import { PrismaUserRepository } from '../infrastructure/repositories/PrismaUserRepository.js';
+import { BcryptPasswordHasher } from '../infrastructure/services/BcryptPasswordHasher.js';
+import { JwtTokenService } from '../infrastructure/services/JwtTokenService.js';
 import { LoginUseCase } from '../use-cases/LoginUseCase.js';
 import { RegisterUseCase } from '../use-cases/RegisterUseCase.js';
 import { AuthController } from './controllers/AuthController.js';
@@ -11,8 +13,10 @@ import { createAuthRoutes } from './routes/authRoutes.js';
 
 export const createApp = (prisma: PrismaClient): Application => {
     const userRepository = new PrismaUserRepository(prisma);
-    const registerUseCase = new RegisterUseCase(userRepository);
-    const loginUseCase = new LoginUseCase(userRepository);
+    const passwordHasher = new BcryptPasswordHasher();
+    const tokenService = new JwtTokenService();
+    const registerUseCase = new RegisterUseCase(userRepository, passwordHasher);
+    const loginUseCase = new LoginUseCase(userRepository, passwordHasher, tokenService);
     const authController = new AuthController(registerUseCase, loginUseCase);
 
     const app = express();

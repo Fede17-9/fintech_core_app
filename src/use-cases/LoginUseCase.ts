@@ -1,14 +1,15 @@
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
 import { InvalidPropValueError } from '../domain/exceptions/DomainError.js';
 import { InvalidCredentialsError } from '../domain/exceptions/UserError.js';
 import type { UserRepository } from '../domain/repositories/Repositories.js';
+import type { PasswordHasher } from '../domain/services/PasswordHasher.js';
+import type { TokenService } from '../domain/services/TokenService.js';
 import type { LoginInputDTO, LoginOutputDTO } from './dto/AuthDTOs.js';
 
 export class LoginUseCase {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly jwtSecret = process.env.JWT_SECRET ?? 'development-secret',
+    private readonly passwordHasher: PasswordHasher,
+    private readonly tokenService: TokenService,
   ) {}
 
   async execute(input: LoginInputDTO): Promise<LoginOutputDTO> {
@@ -17,15 +18,11 @@ export class LoginUseCase {
     }
 
     const user = await this.userRepository.findByEmail(input.email);
-    if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) {
+    if (!user || !(await this.passwordHasher.compare(input.password, user.passwordHash))) {
       throw new InvalidCredentialsError();
     }
 
-    const token = jwt.sign(
-      { sub: user.id, email: user.email },
-      this.jwtSecret,
-      { expiresIn: '1h' },
-    );
+    const token = this.tokenService.generate({ sub: user.id, email: user.email });
 
     return {
       token,
