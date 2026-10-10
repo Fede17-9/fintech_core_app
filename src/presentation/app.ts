@@ -52,7 +52,25 @@ export const createApp = (prisma: PrismaClient): Application => {
     );
 
     const app = express();
-    app.use(cors());
+    // En Render, CLIENT_ORIGIN contiene el dominio publico del frontend.
+    // Sin esa variable se permiten las dos interfaces de desarrollo local.
+    const allowedOrigins = (
+        process.env.CLIENT_ORIGIN ?? 'http://localhost:5173,http://localhost:8080'
+    ).split(',').map((origin) => origin.trim()).filter(Boolean);
+
+    app.use((request, response, next) => {
+        const origin = request.get('Origin');
+        if (origin && !allowedOrigins.includes(origin)) {
+            response.status(403).json({
+                status: 'error',
+                code: 'ORIGIN_NOT_ALLOWED',
+                message: 'Origen no permitido.',
+            });
+            return;
+        }
+        next();
+    });
+    app.use(cors({ origin: allowedOrigins }));
     app.use(express.json());
 
     app.get('/health', (_request, response) => {
